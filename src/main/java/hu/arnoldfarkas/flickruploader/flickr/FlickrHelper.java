@@ -11,8 +11,6 @@ import com.flickr4java.flickr.auth.Permission;
 import com.flickr4java.flickr.photosets.Photoset;
 import com.flickr4java.flickr.photosets.Photosets;
 import com.flickr4java.flickr.uploader.UploadMetaData;
-import hu.arnoldfarkas.flickruploader.util.Utils;
-import hu.arnoldfarkas.flickruploader.util.Utils;
 import java.io.File;
 import org.scribe.model.Token;
 import org.scribe.model.Verifier;
@@ -47,10 +45,11 @@ public class FlickrHelper {
 
     public Token initRequestToken(String tokenKey) {
         requestToken = authInterface.getAccessToken(authtoken, new Verifier(tokenKey));
-        LOGGER.info("requestToken secret: {}" , requestToken.getSecret());
-        LOGGER.info("requestToken token: {}" , requestToken.getToken());
+        LOGGER.info("requestToken secret: {}", requestToken.getSecret());
+        LOGGER.info("requestToken token: {}", requestToken.getToken());
         return requestToken;
     }
+
     public Auth getValidatedUser() throws FlickrException {
         Auth auth = authInterface.checkToken(requestToken);
         validateAuth(auth);
@@ -62,19 +61,14 @@ public class FlickrHelper {
             return;
         }
 
-        Runnable job = new Runnable() {
-            public void run() {
-                try {
-                    LOGGER.debug("uploading photo to " + setName + ": " + file.getName());
-                    String photoId = uploadPhoto(file);
-                    LOGGER.debug("uploaded photo[" + file.getName() + "] id: " + photoId);
-                    putPhotoToSet(photoId, setName);
-                } catch (FlickrException e) {
-                    LOGGER.error("error on upload photo to set", e);
-                }
-            }
-        };
-        Utils.addJobToExecutor(job);
+        try {
+            LOGGER.debug("uploading photo to " + setName + ": " + file.getName());
+            String photoId = uploadPhoto(file);
+            LOGGER.debug("uploaded photo[" + file.getName() + "] id: " + photoId);
+            putPhotoToSet(photoId, setName);
+        } catch (FlickrException e) {
+            LOGGER.error("error on upload photo to set", e);
+        }
     }
 
     private boolean isJpg(File file) {

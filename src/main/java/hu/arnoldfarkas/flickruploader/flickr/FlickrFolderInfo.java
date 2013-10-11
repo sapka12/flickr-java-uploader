@@ -1,6 +1,6 @@
 package hu.arnoldfarkas.flickruploader.flickr;
 
-import hu.arnoldfarkas.flickruploader.FlickrUploader;
+import hu.arnoldfarkas.flickruploader.FlickrWorker;
 import hu.arnoldfarkas.flickruploader.util.Utils;
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,7 +19,7 @@ public class FlickrFolderInfo {
     public static final String PROP_SET = "set";
     public static final String PROP_UPLOADED = "uploaded";
     public static final String PROP_UPLOADED_FILENAMES = "uploaded.filenames";
-    public static final FlickrUploader UPLOADER = new FlickrUploaderImpl();
+    public static final FlickrWorker UPLOADER = new FlickrUploaderImpl();
     private Properties properties;
     private File folder;
 
