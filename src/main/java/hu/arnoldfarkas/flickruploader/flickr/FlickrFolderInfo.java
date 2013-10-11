@@ -1,7 +1,6 @@
 package hu.arnoldfarkas.flickruploader.flickr;
 
 import hu.arnoldfarkas.flickruploader.FlickrUploader;
-import hu.arnoldfarkas.flickruploader.util.FileUploadMarker;
 import hu.arnoldfarkas.flickruploader.util.Utils;
 import java.io.File;
 import java.io.FileInputStream;
@@ -61,9 +60,9 @@ public class FlickrFolderInfo {
         properties.setProperty(PROP_UPLOADED, "true");
         String path = getPropertyFilePath();
         try {
-            properties.store(new FileOutputStream(path), Calendar.getInstance().toString());
+            properties.store(new FileOutputStream(path), null);
         } catch (Throwable ex) {
-            LOGGER.error("Cannot save properties file: {}", path);
+            LOGGER.error("Cannot save properties file: {}", path, ex);
         }
     }
 }

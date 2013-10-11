@@ -51,10 +51,6 @@ public class App {
         String token = scanner.next();
         System.out.println("Token: " + token);
         initProperties(helper.initRequestToken(token));
-
-
-
-
     }
 
     private static void initProperties(Token token) {
@@ -66,7 +62,7 @@ public class App {
             p.setProperty("flickr.requesttoken.token", token.getToken());
             p.setProperty("flickr.requesttoken.secret", token.getSecret());
             
-            p.store(new FileOutputStream("flickr.properties"), "");
+            p.store(new FileOutputStream("flickr.properties"), null);
         } catch (Exception e) {
             LOGGER.error("init properties error", e);
         }
