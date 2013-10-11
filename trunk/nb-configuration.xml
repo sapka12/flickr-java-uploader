@@ -9,8 +9,9 @@ Without this configuration present, some functionality in the IDE may be limited
     <config-data xmlns="http://www.netbeans.org/ns/maven-config-data/1">
         <configurations>
             <configuration id="get auth" profiles=""/>
-            <configuration id="scan folders" profiles=""/>
             <configuration id="scan folder linux" profiles=""/>
+            <configuration id="scan folders" profiles=""/>
+            <configuration id="download set to folder" profiles=""/>
         </configurations>
     </config-data>
 </project-shared-configuration>

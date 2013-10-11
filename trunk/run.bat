@@ -1,1 +1,1 @@
-java -jar ./target/FlickrUploader-1.0-SNAPSHOT.jar d:/kepek
+java -jar ./target/FlickrUploader-1.0-SNAPSHOT.jar batchupload d:/temp/asdf
