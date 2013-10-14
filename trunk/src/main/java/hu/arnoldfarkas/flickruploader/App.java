@@ -9,8 +9,9 @@ public class App {
     private static final Logger LOGGER = LoggerFactory.getLogger(App.class);
 
     public static void main(String[] args) {
-        LOGGER.debug("input: {}", Arrays.asList(args));
+        LOGGER.info("input: {}", Arrays.asList(args));
         TaskChooser taskChooser = new TaskChooser();
         taskChooser.execute(args);
+        LOGGER.info("FlickrUploader finished.");
     }
 }

@@ -15,19 +15,17 @@ import com.flickr4java.flickr.photosets.PhotosetsInterface;
 import com.flickr4java.flickr.uploader.UploadMetaData;
 import com.flickr4java.flickr.uploader.Uploader;
 import hu.arnoldfarkas.flickruploader.FlickrWorker;
-import hu.arnoldfarkas.flickruploader.util.FileUploadMarker;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
-import java.util.logging.Level;
 import org.apache.commons.io.FileUtils;
 import org.scribe.model.Token;
 import org.slf4j.Logger;
@@ -62,7 +60,7 @@ public class FlickrUploaderImpl implements FlickrWorker {
 
     @Override
     public void uploadPhotosToSet(File[] files, final String setName) {
-        files = notMarked(files);
+        files = notUploadedPhotos(files, setName);
         if (files == null || files.length < 1) {
             return;
         }
@@ -120,7 +118,6 @@ public class FlickrUploaderImpl implements FlickrWorker {
         validateAuth(getAuth());
         String photoId = uploadPhotoWithException(file, metaData);
         LOGGER.debug("Photo uploaded: {}", file.getAbsolutePath());
-        markAsUploaded(file);
         return photoId;
     }
 
@@ -172,26 +169,22 @@ public class FlickrUploaderImpl implements FlickrWorker {
         return null;
     }
 
-    private File[] notMarked(File[] files) {
-        Set<File> notMarkedFiles = new HashSet<File>();
+    private File[] notUploadedPhotos(File[] files, String setName) {
+        Set<File> notUploadedFiles = new HashSet<File>();
+
+        List<Photo> uploadedPhotos = getPhotos(setName);
         for (File file : files) {
-            FileUploadMarker marker = new FileUploadMarker(file);
-            if (!marker.isMarked()) {
-                notMarkedFiles.add(file);
+            if (!isAlreadyUploaded(file, uploadedPhotos, setName)) {
+                notUploadedFiles.add(file);
             }
         }
-        files = new File[notMarkedFiles.size()];
+        files = new File[notUploadedFiles.size()];
         int i = 0;
-        for (File file : notMarkedFiles) {
+        for (File file : notUploadedFiles) {
             files[i] = file;
             i++;
         }
         return files;
-    }
-
-    private void markAsUploaded(File file) {
-        FileUploadMarker marker = new FileUploadMarker(file);
-        marker.mark();
     }
 
     @Override
@@ -232,7 +225,13 @@ public class FlickrUploaderImpl implements FlickrWorker {
         try {
             int perPage = Integer.MAX_VALUE;
             int page = 0;
-            final PhotoList<Photo> photos = FLICKR.getPhotosetsInterface().getPhotos(findPhotosetByName(setName).getId(), perPage, page);
+            
+            Photoset photoset = findPhotosetByName(setName);
+            if (photoset == null) {
+                return new ArrayList<Photo>();
+            }
+            
+            final PhotoList<Photo> photos = FLICKR.getPhotosetsInterface().getPhotos(photoset.getId(), perPage, page);
             List<Photo> photoSublist = photos.subList(0, photos.size());
             return photoSublist;
         } catch (FlickrException ex) {
@@ -276,5 +275,16 @@ public class FlickrUploaderImpl implements FlickrWorker {
         long timeSpent = actualTime - startTime;
         Double estimatedTimeSpent = timeSpent / rate;
         return new Date(startTime + estimatedTimeSpent.longValue());
+    }
+
+    private boolean isAlreadyUploaded(File file, List<Photo> uploadedPhotos, String setName) {
+        String filename = file.getName();
+        for (Photo photo : uploadedPhotos) {
+            if (photo.getTitle().equals(filename)) {
+                LOGGER.warn("{} set already contains file: {}", setName, file.getAbsolutePath());
+                return true;
+            }
+        }
+        return false;
     }
 }
