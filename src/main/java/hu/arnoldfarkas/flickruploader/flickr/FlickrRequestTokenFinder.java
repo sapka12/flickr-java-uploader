@@ -1,9 +1,5 @@
 package hu.arnoldfarkas.flickruploader.flickr;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.util.Properties;
 import java.util.Scanner;
 import org.scribe.model.Token;
 import org.slf4j.Logger;
@@ -29,17 +25,11 @@ public class FlickrRequestTokenFinder {
     }
 
     private void initProperties(Token token) {
-        try {
-            Properties p = new Properties();
-            InputStream is = new FileInputStream("flickr.properties");
-            p.load(is);
 
-            p.setProperty("flickr.requesttoken.token", token.getToken());
-            p.setProperty("flickr.requesttoken.secret", token.getSecret());
-
-            p.store(new FileOutputStream("flickr.properties"), null);
-        } catch (Exception e) {
-            LOGGER.error("init properties error", e);
-        }
+            
+            
+            FlickrProperties.save(FlickrProperties.PROP_REQUEST_TOKEN, token.getToken());
+            FlickrProperties.save(FlickrProperties.PROP_REQUEST_SECRET, token.getSecret());
+ 
     }
 }
