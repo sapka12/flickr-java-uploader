@@ -16,7 +16,6 @@ import com.flickr4java.flickr.uploader.UploadMetaData;
 import com.flickr4java.flickr.uploader.Uploader;
 import hu.arnoldfarkas.flickruploader.FlickrWorker;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -24,7 +23,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Properties;
 import java.util.Set;
 import org.apache.commons.io.FileUtils;
 import org.scribe.model.Token;
@@ -33,30 +31,14 @@ import org.slf4j.LoggerFactory;
 
 public class FlickrUploaderImpl implements FlickrWorker {
 
-    private static final Properties PROPERTIES = loadProperties();
     private static final Logger LOGGER = LoggerFactory.getLogger(FlickrUploaderImpl.class);
-    private static final String API_KEY = PROPERTIES.getProperty("flickr.apikey");
-    private static final String SECRET = PROPERTIES.getProperty("flickr.apisecret");
+    private static final String API_KEY = FlickrProperties.getProperty(FlickrProperties.PROP_API_KEY);
+    private static final String SECRET = FlickrProperties.getProperty(FlickrProperties.PROP_API_SECRET);
     private static final Transport TRANSPORT = new REST();
     private static final Flickr FLICKR = new Flickr(API_KEY, SECRET, TRANSPORT);
     private static final Token REQUEST_TOKEN = new Token(
-            PROPERTIES.getProperty("flickr.requesttoken.token"),
-            PROPERTIES.getProperty("flickr.requesttoken.secret"));
-
-    public FlickrUploaderImpl() {
-        LOGGER.debug("FLICKR PROPERTIES: {}", PROPERTIES);
-    }
-
-    private static Properties loadProperties() {
-        try {
-            Properties p = new Properties();
-            InputStream is = new FileInputStream("flickr.properties");
-            p.load(is);
-            return p;
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
-    }
+      FlickrProperties.getProperty(FlickrProperties.PROP_REQUEST_TOKEN),
+      FlickrProperties.getProperty(FlickrProperties.PROP_REQUEST_SECRET));
 
     @Override
     public void uploadPhotosToSet(File[] files, final String setName) {
@@ -124,7 +106,7 @@ public class FlickrUploaderImpl implements FlickrWorker {
     private Auth getAuth() {
         try {
             return FLICKR.getAuthInterface().checkToken(REQUEST_TOKEN);
-        } catch (Exception e) {
+        } catch (FlickrException e) {
             throw new RuntimeException(e);
         }
     }
@@ -163,7 +145,7 @@ public class FlickrUploaderImpl implements FlickrWorker {
                     return photoset;
                 }
             }
-        } catch (Throwable e) {
+        } catch (FlickrException e) {
             LOGGER.warn("Cannot find set: {}", setName, e);
         }
         return null;
@@ -207,13 +189,12 @@ public class FlickrUploaderImpl implements FlickrWorker {
 
         List<Photo> photos = getPhotos(setName);
 
-
         long startTime = System.currentTimeMillis();
         int numberOfPhotos = photos.size();
         long actualIndex = 0;
         for (Photo photo : photos) {
             actualIndex++;
-            uploadPhotoToDir(photo, outputFolder);
+            downloadPhotoToDir(photo, outputFolder);
             long actualTime = System.currentTimeMillis();
             Date estimatedEnd = estimatedEnd(startTime, actualTime, actualIndex, numberOfPhotos);
             LOGGER.debug("Estimated end date: {}", estimatedEnd);
@@ -239,20 +220,22 @@ public class FlickrUploaderImpl implements FlickrWorker {
         }
     }
 
-    private void uploadPhotoToDirWithException(Photo photo, File outputFolder) throws FlickrException, IOException {
+    private void downloadPhotoToDirWithException(Photo photo, File outputFolder) throws FlickrException, IOException {
         InputStream is = FLICKR.getPhotosInterface().getImageAsStream(photo, Size.ORIGINAL);
         File newPhotofile = createDownloadedFilePath(outputFolder, photo.getTitle());
         FileUtils.copyInputStreamToFile(is, newPhotofile);
         LOGGER.debug("{} downloaded", newPhotofile.getAbsolutePath());
     }
 
-    private void uploadPhotoToDir(Photo photo, File outputFolder) {
+    private void downloadPhotoToDir(Photo photo, File outputFolder) {
         boolean downloaded = false;
         while (!downloaded) {
             try {
-                uploadPhotoToDirWithException(photo, outputFolder);
+                downloadPhotoToDirWithException(photo, outputFolder);
                 downloaded = true;
-            } catch (Throwable e) {
+            } catch (FlickrException e) {
+                LOGGER.debug("need to try download again: {}", photo.getTitle(), e);
+            } catch (IOException e) {
                 LOGGER.debug("need to try download again: {}", photo.getTitle(), e);
             }
         }

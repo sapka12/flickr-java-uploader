@@ -20,10 +20,10 @@ import org.slf4j.LoggerFactory;
 public class FlickrHelper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FlickrHelper.class);
-    private static final String API_KEY = "17b52840f55eba355a4c3d20c128430d";
-    private static final String SECRET = "d0fccf78386ca7ed";
+    private static final String API_KEY = FlickrProperties.getProperty(FlickrProperties.PROP_API_KEY);
+    private static final String SECRET = FlickrProperties.getProperty(FlickrProperties.PROP_API_SECRET);
     private static final Transport TRANSPORT = new REST();
-    Flickr FLICKR = new Flickr(API_KEY, SECRET, TRANSPORT);
+    private final Flickr FLICKR = new Flickr(API_KEY, SECRET, TRANSPORT);
     private AuthInterface authInterface;
     private Token authtoken;
     private Token requestToken;
