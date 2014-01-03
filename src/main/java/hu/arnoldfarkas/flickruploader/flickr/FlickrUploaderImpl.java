@@ -41,14 +41,14 @@ public class FlickrUploaderImpl implements FlickrWorker {
       FlickrProperties.getProperty(FlickrProperties.PROP_REQUEST_SECRET));
 
     @Override
-    public void uploadPhotosToSet(File[] files, final String setName) {
+    public void uploadPhotosToSet(File[] files, final String setName, boolean familyOnly) {
         files = notUploadedPhotos(files, setName);
         if (files == null || files.length < 1) {
             return;
         }
 
         File firstPhoto = files[0];
-        String firstPhotoId = uploadPhoto(firstPhoto);
+        String firstPhotoId = uploadPhoto(firstPhoto, familyOnly);
 
         Photoset photoset = findPhotosetByName(setName);
         if (photoset == null) {
@@ -66,13 +66,13 @@ public class FlickrUploaderImpl implements FlickrWorker {
         }
         final File[] notFirstPhotos = Arrays.copyOfRange(files, 1, files.length);
         for (File file : notFirstPhotos) {
-            uploadPhotoToSet(file, photoset);
+            uploadPhotoToSet(file, photoset, familyOnly);
         }
     }
 
-    private void uploadPhotoToSet(final File photo, final Photoset photoset) {
+    private void uploadPhotoToSet(final File photo, final Photoset photoset, boolean familyOnly) {
         try {
-            String photoId = uploadPhoto(photo);
+            String photoId = uploadPhoto(photo, familyOnly);
             putPhotoToSet(photoId, photoset);
         } catch (FlickrException ex) {
             LOGGER.error("Error on upload: {}", photo.getName(), ex);
@@ -92,11 +92,15 @@ public class FlickrUploaderImpl implements FlickrWorker {
         return photoset;
     }
 
-    private String uploadPhoto(File file) {
+    private String uploadPhoto(File file, boolean familyOnly) {
         UploadMetaData metaData = new UploadMetaData();
         metaData.setTitle(file.getName());
         metaData.setHidden(false);
-        metaData.setPublicFlag(true);
+        if (familyOnly) {
+            metaData.setFamilyFlag(true);
+        } else {
+            metaData.setPublicFlag(true);
+        }
         validateAuth(getAuth());
         String photoId = uploadPhotoWithException(file, metaData);
         LOGGER.debug("Photo uploaded: {}", file.getAbsolutePath());
@@ -206,12 +210,12 @@ public class FlickrUploaderImpl implements FlickrWorker {
         try {
             int perPage = Integer.MAX_VALUE;
             int page = 0;
-            
+
             Photoset photoset = findPhotosetByName(setName);
             if (photoset == null) {
                 return new ArrayList<Photo>();
             }
-            
+
             final PhotoList<Photo> photos = FLICKR.getPhotosetsInterface().getPhotos(photoset.getId(), perPage, page);
             List<Photo> photoSublist = photos.subList(0, photos.size());
             return photoSublist;
