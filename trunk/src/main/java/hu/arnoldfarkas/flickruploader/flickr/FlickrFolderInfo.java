@@ -40,7 +40,7 @@ public class FlickrFolderInfo {
         return new FlickrFolderInfo(flickrFolder);
     }
 
-    public void update() {
+    public void update(boolean familyOnly) {
 
         String setName = properties.getProperty(PROP_SET);
         boolean uploaded = properties.getProperty(PROP_UPLOADED) == null ? false : properties.getProperty(PROP_UPLOADED).toLowerCase().equals("true");
@@ -51,7 +51,7 @@ public class FlickrFolderInfo {
             LOGGER.debug("Folder info has no setname: {}", folder.getAbsolutePath());
         } else {
             LOGGER.info("Uploading: {}, {}", folder.getAbsolutePath(), properties);
-            UPLOADER.uploadPhotosToSet(Utils.jpgFilesInDirectory(folder), setName);
+            UPLOADER.uploadPhotosToSet(Utils.jpgFilesInDirectory(folder), setName, familyOnly);
             refreshProperties();
         }
     }
